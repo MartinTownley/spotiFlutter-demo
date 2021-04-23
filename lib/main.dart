@@ -35,6 +35,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _connected = false;
+
   String text = ""; //to hold the input text
 
   void changeText(String text) {
@@ -50,7 +52,10 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Column(children: <Widget>[
         Center(
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              print('button clicked');
+              //onnectToSpotifyRemote;
+            },
             child: Text("Connect"),
           ),
         ),
