@@ -1,10 +1,6 @@
-import 'dart:async';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:logger/logger.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:spotify_sdk/models/crossfade_state.dart';
@@ -19,11 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Spotify Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
+      title: 'Welcome to Flutter',
       home: MyHomePage(),
     );
   }
@@ -35,102 +27,119 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _loading = false;
   bool _connected = false;
-
-  String text = ""; //to hold the input text
-
-  void changeText(String text) {
-    this.setState(() {
-      this.text = text;
-    });
-  } // this function will get called elsewhere, and used to pass text into our homepage class.
+  final Logger _logger = Logger();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Hello World')),
-      body: Column(children: <Widget>[
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              print('button clicked');
-              //onnectToSpotifyRemote;
-            },
-            child: Text("Connect"),
-          ),
+        appBar: AppBar(
+          title: Text('title'),
         ),
-        TextInputWidget(this.changeText),
-        Text(this.text)
-      ]),
-    );
+        body: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: connectToSpotifyRemote,
+              child: const Icon(Icons.settings_remote, size: 40),
+            ),
+            TextButton(
+              onPressed: play,
+              child: const Icon(Icons.play_circle_filled, size: 40),
+            ),
+            TextButton(
+              onPressed: resume,
+              child: const Icon(Icons.play_arrow, size: 40),
+            ),
+            TextButton(
+              onPressed: pause,
+              child: const Icon(Icons.pause, size: 40),
+            )
+          ],
+        ));
+  }
+
+  Future<void> connectToSpotifyRemote() async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      var result = await SpotifySdk.connectToSpotifyRemote(
+          clientId: '0321a937fe5c4fd2baafcff2f29c3f37',
+          redirectUrl: 'http://localhost/');
+      setStatus(result
+          ? 'connect to spotify successful'
+          : 'connect to spotfiy failed');
+      setState(() {
+        _loading = false;
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        _loading = false;
+      });
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setState(() {
+        _loading = false;
+      });
+      setStatus('not implemented');
+    }
+  }
+
+  Future<void> play() async {
+    try {
+      await SpotifySdk.play(spotifyUri: 'spotify:track:58kNJana4w5BIjlZE2wq5m');
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  Future<void> queue() async {
+    try {
+      await SpotifySdk.queue(
+          spotifyUri: 'spotify:track:58kNJana4w5BIjlZE2wq5m');
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  Future<void> resume() async {
+    try {
+      await SpotifySdk.resume();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  Future<void> pause() async {
+    try {
+      await SpotifySdk.pause();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  Future getPlayerState() async {
+    try {
+      return await SpotifySdk.getPlayerState();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  void setStatus(String code, {String? message}) {
+    var text = message ?? '';
+    _logger.i('$code$text');
   }
 }
-
-class TextInputWidget extends StatefulWidget {
-  final Function(String) callback;
-
-  //constructor:
-  TextInputWidget(this.callback);
-
-  @override
-  _TextInputWidgetState createState() => _TextInputWidgetState();
-}
-
-class _TextInputWidgetState extends State<TextInputWidget> {
-  final controller =
-      TextEditingController(); //can use this controller to access the values of our text field.
-  @override
-  void dispose() {
-    super.dispose(); //disposes of the parent
-    controller.dispose();
-  }
-
-  void click() {
-    //call the callback
-    widget.callback(controller.text);
-    controller.clear();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-        controller: this.controller,
-        decoration: InputDecoration(
-            prefixIcon: Icon(Icons.message),
-            labelText: "Type a message:",
-            suffixIcon: IconButton(
-              icon: Icon(Icons.send),
-              splashColor: Colors.blue,
-              tooltip: "Post message", //displayed on longpress
-              onPressed: this.click,
-            )));
-  }
-}
-
-//Connection to Spotify:
-// Future<void> connectToSpotifyRemote() async {
-//     try {
-//       setState(() {
-//         _loading = true;
-//       });
-//       var result = await SpotifySdk.connectToSpotifyRemote(
-//           clientId: env['CLIENT_ID'].toString(),
-//           redirectUrl: env['REDIRECT_URL'].toString());
-//       setStatus(result
-//           ? 'connect to spotify successful'
-//           : 'connect to spotify failed');
-//       setState(() {
-//         _loading = false;
-//       });
-//     } on PlatformException catch (e) {
-//       setState(() {
-//         _loading = false;
-//       });
-//       setStatus(e.code, message: e.message);
-//     } on MissingPluginException {
-//       setState(() {
-//         _loading = false;
-//       });
-//       setStatus('not implemented');
-//     }
-//   }
