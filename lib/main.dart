@@ -66,8 +66,8 @@ class _MyHomePageState extends State<MyHomePage> {
         _loading = true;
       });
       var result = await SpotifySdk.connectToSpotifyRemote(
-          clientId: '0321a937fe5c4fd2baafcff2f29c3f37',
-          redirectUrl: 'http://localhost/');
+          clientId: 'b2b0a3df4e474542803fd93f28628134',
+          redirectUrl: 'https://localhost/');
       setStatus(result
           ? 'connect to spotify successful'
           : 'connect to spotfiy failed');
