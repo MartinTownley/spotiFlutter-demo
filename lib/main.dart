@@ -89,7 +89,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> play() async {
     try {
-      await SpotifySdk.play(spotifyUri: 'spotify:track:58kNJana4w5BIjlZE2wq5m');
+      await SpotifySdk.play(
+          spotifyUri: 'spotify:track:58kNJana4w5BIjlZE2wq5m', asRadio: true);
     } on PlatformException catch (e) {
       setStatus(e.code, message: e.message);
     } on MissingPluginException {
